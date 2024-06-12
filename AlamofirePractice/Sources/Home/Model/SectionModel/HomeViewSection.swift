@@ -7,7 +7,7 @@
 
 import UIKit
 
-enum HomeViewSection: Int, CompositionalLayoutSection {
+enum HomeViewSection: CompositionalLayoutSectionType {
     case chart
     case playlist
     

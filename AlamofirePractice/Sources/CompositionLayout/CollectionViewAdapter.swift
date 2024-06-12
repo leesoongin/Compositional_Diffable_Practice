@@ -8,12 +8,12 @@
 import Combine
 import UIKit
 
-final class CollectionViewAdapter: NSObject {
+final class CollectionViewAdapter<Section: CompositionalLayoutSectionType>: NSObject {
     var cancellables = Set<AnyCancellable>()
     
     weak var collectionView: UICollectionView?
-    var dataSource: UICollectionViewDiffableDataSource<HomeViewSection, String>!
-    var snapshot = NSDiffableDataSourceSnapshot<HomeViewSection, String>()
+    var dataSource: UICollectionViewDiffableDataSource<Section, String>!
+    var snapshot = NSDiffableDataSourceSnapshot<Section, String>()
     
     private let inputSectionSubject = CurrentValueSubject<[CompositionalLayoutModelType], Never>([])
     
@@ -50,14 +50,15 @@ final class CollectionViewAdapter: NSObject {
     private func updateSections(with inputSections: [CompositionalLayoutModelType]) {
         guard !inputSections.isEmpty else { return }
         
-        HomeViewSection.allCases.forEach { section in
+        Section.allCases.forEach { section in
             applySnapshot(with: inputSections, toSection: section)
         }
     }
     
     private func createLayout() -> UICollectionViewLayout {
         return UICollectionViewCompositionalLayout { sectionIndex, enviroment -> NSCollectionLayoutSection? in
-            return HomeViewSection(rawValue: sectionIndex)?.createCollectionLayout()
+            let sectionAllCases = Array(Section.allCases)
+            return sectionAllCases[sectionIndex].createCollectionLayout()
         }
     }
     
@@ -65,7 +66,7 @@ final class CollectionViewAdapter: NSObject {
         guard let collectionView = collectionView else { return }
         
         self.collectionView?.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "cell")
-        self.dataSource = UICollectionViewDiffableDataSource<HomeViewSection, String>(collectionView: collectionView) { (collectionView, indexPath, dj) -> UICollectionViewCell? in
+        self.dataSource = UICollectionViewDiffableDataSource<Section, String>(collectionView: collectionView) { (collectionView, indexPath, dj) -> UICollectionViewCell? in
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath)
             cell.backgroundColor = .systemBlue
             
@@ -78,14 +79,23 @@ final class CollectionViewAdapter: NSObject {
     }
     
     private func initializeSnapshot() {
-        snapshot.appendSections(HomeViewSection.allCases)
+        let sectionAllCases = Array(Section.allCases)
+        snapshot.appendSections(sectionAllCases)
         
         dataSource.apply(snapshot, animatingDifferences: true)
     }
     
-    private func applySnapshot(with sections: [CompositionalLayoutModelType], toSection section: HomeViewSection) {
-        let models = sections.filter { $0.sectionType == section }.flatMap { $0.itemModels }
-        snapshot.appendItems(models, toSection: section)
+    private func applySnapshot(with sections: [CompositionalLayoutModelType], toSection sectionType: Section) {
+        let models = sections.filter { section in
+            guard let castedSectionType = section.sectionType as? Section else {
+                return false
+            }
+            
+            return castedSectionType == sectionType
+        }
+            .flatMap { $0.itemModels }
+        
+        snapshot.appendItems(models, toSection: sectionType)
         
         dataSource.apply(snapshot, animatingDifferences: true)
     }

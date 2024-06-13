@@ -8,46 +8,30 @@
 import Foundation
 import Combine
 
+struct HomeModel {
+    let identifier: String
+    let item: String
+}
+
 final class HomeViewModel {
     private let converter = HomeViewSectionConverter()
     
-    var compositionSections = CurrentValueSubject<[CompositionalLayoutModelType], Never>([])
-    var mockCharts = [
-        "chart1",
-        "chart2",
-        "chart3",
-        "chart4",
-        "chart5",
-        "chart6",
-        "chart7",
-        "chart8",
-    ]
-    
-    var mockPlaylists = [
-        "playlist1",
-        "playlist2",
-        "playlist3",
-        "playlist4",
-        "playlist5",
-        "playlist6",
-        "playlist7",
-        "playlist8",
-        "playlist9",
-        "playlist10",
-        "playlist11",
-        "playlist12",
-        "playlist13"
-    ]
+    var compositionSections = CurrentValueSubject<[SectionModelType], Never>([])
+ 
+    var mockCharts: [HomeModel] = []
+    var mockPlaylist: [HomeModel] = []
     
     init() {
+        mockCharts = Array(1...7).map { HomeModel(identifier: UUID().uuidString, item: "\($0)") }
+        mockPlaylist = Array(1...14).map { HomeModel(identifier: UUID().uuidString, item: "\($0)") }
         compositionSections.send(converter.createSections(charts: mockCharts,
-                                                          playlists: mockPlaylists))
+                                                          playlists: mockPlaylist))
     }
     
     func addPlaylist() {
-        mockPlaylists.append(UUID().uuidString)
+        mockPlaylist.append(HomeModel(identifier: UUID().uuidString, item: "추카추카가가"))
         
         compositionSections.send(converter.createSections(charts: mockCharts,
-                                                          playlists: mockPlaylists))
+                                                          playlists: mockPlaylist))
     }
 }

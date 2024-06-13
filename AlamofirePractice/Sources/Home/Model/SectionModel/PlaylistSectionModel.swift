@@ -35,15 +35,16 @@ struct PlaylistSectionModel: CompositionalLayoutModelType {
     // 이건 어뎁터에서 호출?하는게? 나을듯?
     func createLayoutSection() -> NSCollectionLayoutSection {
         let item = NSCollectionLayoutItem(layoutSize: self.itemSize)
-        item.contentInsets = self.itemInset
         
         // group
         let group = NSCollectionLayoutGroup.vertical(layoutSize: self.groupSize, subitems: [item])
         
+        
         // section
         let section = NSCollectionLayoutSection(group: group)
+        section.interGroupSpacing = 16 // paging 할때에는 group spacing 이 필요함
         section.contentInsets = self.sectionInset
-        section.orthogonalScrollingBehavior = .groupPaging
+        section.orthogonalScrollingBehavior = .groupPagingCentered
         
         return section
     }

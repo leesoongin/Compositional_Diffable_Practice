@@ -14,10 +14,10 @@ enum HomeViewSection: CompositionalLayoutSectionType {
     func createCollectionLayout() -> NSCollectionLayoutSection {
         switch self {
         case .chart:
-            let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.5),
-                                                  heightDimension: .fractionalHeight(1.0))
-            let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.9),
-                                                   heightDimension: .fractionalHeight(0.3))
+            let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
+                                                  heightDimension: .estimated(50))
+            let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
+                                                   heightDimension: .estimated(50))
             
             let itemInset = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
             let sectionInset = NSDirectionalEdgeInsets(top: 16, leading: 0, bottom: 16, trailing: 0)
@@ -26,12 +26,13 @@ enum HomeViewSection: CompositionalLayoutSectionType {
                                             groupSize: groupSize,
                                             itemInset: itemInset,
                                             sectionInset: sectionInset)
+            
             return section.createLayoutSection()
         case .playlist:
             let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
-                                                  heightDimension: .fractionalHeight(0.25))
-            let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.9),
-                                                   heightDimension: .fractionalHeight(0.3))
+                                                  heightDimension: .estimated(50))
+            let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.8),
+                                                   heightDimension: .estimated(50))
             
             let itemInset = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 0, trailing: 16)
             

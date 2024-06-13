@@ -34,7 +34,6 @@ struct ChartSectionModel: CompositionalLayoutModelType {
     
     func createLayoutSection() -> NSCollectionLayoutSection {
         let item = NSCollectionLayoutItem(layoutSize: self.itemSize)
-        item.contentInsets = self.itemInset
         
         // group
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: self.groupSize, subitems: [item])

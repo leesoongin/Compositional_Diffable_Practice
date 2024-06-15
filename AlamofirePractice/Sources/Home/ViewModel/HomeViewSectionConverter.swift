@@ -8,6 +8,9 @@
 import Combine
 import UIKit
 
+// homeSection 의 case 순서에 따라 component를 만들어야함
+// 이걸 강제할 방법은 없을가?
+// HomeViewSection을 Converter 처럼 쓸 수는 없을까?
 final class HomeViewSectionConverter {
     func createSections(charts: [HomeModel],
                         playlists: [HomeModel]) -> [SectionModelType] {

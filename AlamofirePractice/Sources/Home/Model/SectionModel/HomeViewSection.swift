@@ -7,6 +7,8 @@
 
 import UIKit
 
+// 1. 해당 enum case 의 순서대로 section 이 생성된다.
+// 2. 동일한 형태의 section 이라도, 다른 이름의 Case 가 필요하다. Why? DiffableDataSource의 키값에 들어가는 타입은 모두 Hashable.
 enum HomeViewSection: CompositionalLayoutSectionType {
     case chart
     case playlist

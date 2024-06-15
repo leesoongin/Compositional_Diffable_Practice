@@ -31,7 +31,7 @@ final class HomeViewController: ViewController<HomeView> {
                 
                 switch actionItem {
                 case let action as AssistantCommonErrorAction:
-                    self.adapter.toggleItemExpansion(with: action.identifier)
+                    self.adapter.updateDataSource(with: action.identifier)
                 default:
                     break
                 }

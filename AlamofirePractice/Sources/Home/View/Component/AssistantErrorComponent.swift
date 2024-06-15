@@ -30,6 +30,7 @@ struct AssistantCommonErrorComponent: Component {
     
     func prepareForReuse(content: ErrorView) {
         content.aLabel.numberOfLines = 1
+        content.aButton.isSelected = false
     }
 }
 

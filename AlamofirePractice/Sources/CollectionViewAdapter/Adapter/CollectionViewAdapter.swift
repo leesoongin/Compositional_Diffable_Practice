@@ -84,21 +84,10 @@ final class CollectionViewAdapter<Section: CompositionalLayoutSectionType>: NSOb
     
     private func cancelForPrepareForReuse(with view: UICollectionReusableView, cancellables: [AnyCancellable]) {
         guard let collectionView = collectionView else { return }
-        // Create a publisher for didEndDisplayingCell and didEndDisplayingSupplementaryView
-        let didEndDisplayingCellPublisher = collectionView.didEndDisplayingCellPublisher.map { $0.cell as UICollectionReusableView }
-        let didEndDisplayingSupplementaryViewPublisher = collectionView.didEndDisplaySupplementaryViewPublisher.map { $0.supplementaryView as UICollectionReusableView }
-
-        let endDisplaying = Publishers.Merge(didEndDisplayingCellPublisher, didEndDisplayingSupplementaryViewPublisher)
-            .filter { [weak view] cell in
-                view == cell
-            }
-            .map { _ in }
         
-        
-        
-        Publishers.Merge(endDisplaying, view.prepareForReuseSubject)
+        view.prepareForReuseSubject
             .first()
-            .sink(receiveValue: {
+            .sink(receiveValue: {_ in 
                 cancellables.forEach { $0.cancel() }
             }).store(in: &self.cancellables)
     }

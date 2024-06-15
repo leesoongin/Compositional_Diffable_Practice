@@ -5,14 +5,25 @@
 //  Created by 이숭인 on 6/11/24.
 //
 
-import Combine
 import UIKit
+import Combine
+import CombineCocoa
 
 final class CollectionViewAdapter<Section: CompositionalLayoutSectionType>: NSObject {
     var cancellables = Set<AnyCancellable>()
     
     weak var collectionView: UICollectionView?
     var dataSource: UICollectionViewDiffableDataSource<Section, ListItem>!
+    
+    private let didSelectItemSubject = PassthroughSubject<ItemModelType, Never>()
+    var didSelectItemPublisher: AnyPublisher<ItemModelType, Never> {
+        didSelectItemSubject.eraseToAnyPublisher()
+    }
+    
+    private let actionEventSubject = PassthroughSubject<ActionEventItem, Never>()
+    var actionEventPublisher: AnyPublisher<ActionEventItem, Never> {
+        actionEventSubject.eraseToAnyPublisher()
+    }
     
     private let inputSectionSubject = CurrentValueSubject<[SectionModelType], Never>([])
     private var sections: [SectionModelType] {
@@ -28,10 +39,9 @@ final class CollectionViewAdapter<Section: CompositionalLayoutSectionType>: NSOb
         let layout = createLayout()
         self.collectionView?.setCollectionViewLayout(layout, animated: false)
         
-        
-        bindInputSections()
         setupCollectionDataSource()
-        initializeSnapshot()
+        bindDelegateEvent()
+        bindInputSections()
     }
     
     func setupInputSectionsIfNeeded(with sections: [SectionModelType]) {
@@ -45,6 +55,52 @@ final class CollectionViewAdapter<Section: CompositionalLayoutSectionType>: NSOb
                 self?.updateSections(with: sections)
             }
             .store(in: &cancellables)
+    }
+    
+    private func bindDelegateEvent() {
+        collectionView?.didSelectItemPublisher
+            .sink(receiveValue: { [weak self] indexPath in
+                guard let itemModel = self?.dataSource.itemIdentifier(for: indexPath)?.itemModel else {
+                    return
+                }
+                
+                self?.didSelectItemSubject.send(itemModel)
+            })
+            .store(in: &cancellables)
+    }
+    
+    private func bindActionEvent(with view: UICollectionReusableView) {
+        guard let actionEventEmitable: ActionEventEmitable = convertProtocol(with: view) else { return }
+        
+        let actionEventCancellables = actionEventEmitable.actionEventEmitter
+            .sink { [weak self] actionEvent in
+                self?.actionEventSubject.send(actionEvent)
+            }
+        actionEventCancellables
+            .store(in: &cancellables)
+        
+        cancelForPrepareForReuse(with: view, cancellables: [actionEventCancellables])
+    }
+    
+    private func cancelForPrepareForReuse(with view: UICollectionReusableView, cancellables: [AnyCancellable]) {
+        guard let collectionView = collectionView else { return }
+        // Create a publisher for didEndDisplayingCell and didEndDisplayingSupplementaryView
+        let didEndDisplayingCellPublisher = collectionView.didEndDisplayingCellPublisher.map { $0.cell as UICollectionReusableView }
+        let didEndDisplayingSupplementaryViewPublisher = collectionView.didEndDisplaySupplementaryViewPublisher.map { $0.supplementaryView as UICollectionReusableView }
+
+        let endDisplaying = Publishers.Merge(didEndDisplayingCellPublisher, didEndDisplayingSupplementaryViewPublisher)
+            .filter { [weak view] cell in
+                view == cell
+            }
+            .map { _ in }
+        
+        
+        
+        Publishers.Merge(endDisplaying, view.prepareForReuseSubject)
+            .first()
+            .sink(receiveValue: {
+                cancellables.forEach { $0.cancel() }
+            }).store(in: &self.cancellables)
     }
     
     private func updateSections(with inputSections: [SectionModelType]) {
@@ -72,35 +128,25 @@ final class CollectionViewAdapter<Section: CompositionalLayoutSectionType>: NSOb
             cell.bind(with: itemModel)
         }
     }
-    
+        
     private func setupCollectionDataSource() {
         guard let collectionView = collectionView else { return }
-        
-        collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "cell")
         
         self.dataSource = UICollectionViewDiffableDataSource<Section, ListItem>(collectionView: collectionView) { (collectionView, indexPath, dj) -> UICollectionViewCell? in
             guard let itemModel = self.itemModel(at: indexPath) else {
                 return nil
             }
             
+            //regist
             let reuseIdentifier = itemModel.viewType.getIdentifier()
             self.registerCellIfNeeded(with: itemModel)
             
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath)
             self.bindItemModelIfNeeded(to: cell, with: itemModel)
-            cell.backgroundColor = .systemBlue
+            self.bindActionEvent(with: cell)
             
             return cell
         }
-    }
-    
-    private func initializeSnapshot() {
-        var snapshot = NSDiffableDataSourceSnapshot<Section, ListItem>()
-        
-        let sectionAllCases = Array(Section.allCases)
-        snapshot.appendSections(sectionAllCases)
-        
-        dataSource.apply(snapshot, animatingDifferences: true)
     }
     
     private func applySnapshot(with sections: [SectionModelType]) {
@@ -115,16 +161,41 @@ final class CollectionViewAdapter<Section: CompositionalLayoutSectionType>: NSOb
         
         self.dataSource.apply(snapshot, animatingDifferences: true)
     }
+    
+    func toggleItemExpansion(with identifier: String) {
+        var snapshot = dataSource.snapshot()
+        
+        dataSource.apply(snapshot, animatingDifferences: true)
+    }
 }
 
 extension CollectionViewAdapter {
     func itemModel(at indexPath: IndexPath) -> ItemModelType? {
         sections[safe: indexPath.section]?.itemModels[safe: indexPath.item]
     }
+    
+    func findIndexPathByIdentifier(with identifier: String) -> IndexPath? {
+        var target: IndexPath? = nil
+        sections.enumerated().forEach { index, section in
+            if let row = section.itemModels.firstIndex(where: { $0.identifier == identifier }) {
+                target = IndexPath(item: row, section: index)
+            }
+        }
+        
+        return target
+    }
+    
+    func convertProtocol<P>(with view: UICollectionReusableView) -> P? {
+        if let cell = view as? UICollectionViewCell,
+           let target = (cell as? P) ?? cell.contentView.subviews.first as? P {
+            return target
+        } else {
+            return nil
+        }
+    }
 }
 
 extension Collection {
-
     /// Returns the element at the specified index if it is within bounds, otherwise nil.
     subscript (safe index: Index) -> Element? {
         return indices.contains(index) ? self[index] : nil

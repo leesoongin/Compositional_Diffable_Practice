@@ -8,7 +8,12 @@
 import UIKit
 import Combine
 import CombineExt
+import CombineCocoa
 import SnapKit
+
+struct AssistantCommonErrorAction: ActionEventItem {
+    let identifier: String
+}
 
 struct AssistantCommonErrorComponent: Component {
     let identifier: String
@@ -22,34 +27,61 @@ struct AssistantCommonErrorComponent: Component {
     func hash(into hasher: inout Hasher) {
         hasher.combine(message)
     }
+    
+    func prepareForReuse(content: ErrorView) {
+        content.aLabel.numberOfLines = 1
+    }
 }
 
 extension AssistantCommonErrorComponent {
     typealias ContentType = ErrorView
 
     func render(content: ContentType, context: Self, cancellable: inout Set<AnyCancellable>) {
-        content.label.text = context.message
+        content.aLabel.text = "kadsjljldsdjajlkajdlajdladjlkadjlkajdklajdkljkljakdjkaldjklajdkdjkadjklasjdklajdklajskdljakldkadsjljldsdjajlkajdlajdladjlkadjlkajdklajdkljkljakdjkaldjklajdkdjkadjklasjdklajdklajskdljakldkadsjljldsdjajlkajdlajdladjlkadjlkajdklajdkljkljakdjkaldjklajdkdjkadjklasjdklajdklajskdljakldkadsjljldsdjajlkajdlajdladjlkadjlkajdklajdkljkljakdjkaldjklajdkdjkadjklasjdklajdklajskdljakldkadsjljldsdjajlkajdlajdladjlkadjlkajdklajdkljkljakdjkaldjklajdkdjkadjklasjdklajdklajskdljakldkadsjljldsdjajlkajdlajdladjlkadjlkajdklajdkljkljakdjkaldjklajdkdjkadjklasjdklajdklajskdljakld"
+        
+        content.aButton.setTitle(context.message, for: .normal)
+        content.aButton.setTitleColor(.white, for: .normal)
+        
+        content.aButton.tapPublisher
+            .sink { [weak content] _ in
+                guard let content = content else { return }
+                content.aButton.isSelected.toggle()
+                content.aLabel.numberOfLines = content.aButton.isSelected ? 0 : 1
+                content.actionEventEmitter.send(AssistantCommonErrorAction(identifier: context.identifier))
+            }
+            .store(in: &cancellable)
     }
 }
 
-final class ErrorView: BaseView {
-    let container = UIView()
-    let label = UILabel()
+final class ErrorView: BaseView, ActionEventEmitable {
+    var actionEventEmitter = PassthroughSubject<ActionEventItem, Never>()
+    
+    let aButton = UIButton()
+    let aLabel = UILabel()
     override func setup() {
         super.setup()
     }
     
+    
+    
     override func setupSubviews() {
-        addSubview(label)
+        addSubview(aLabel)
+        addSubview(aButton)
         
-        label.numberOfLines = 0
-        label.backgroundColor = .white
+        aButton.backgroundColor = .systemBlue
     }
     
     override func setupConstraints() {
+        aLabel.snp.makeConstraints { make in
+            make.top.equalToSuperview().inset(16)
+            make.horizontalEdges.equalToSuperview().inset(16)
+        }
         
-        label.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(16)
+        aButton.snp.makeConstraints { make in
+            make.top.equalTo(aLabel.snp.bottom).offset(16)
+            make.horizontalEdges.equalToSuperview().inset(16)
+            make.bottom.equalToSuperview().inset(16)
+            make.height.equalTo(32)
         }
     }
 }

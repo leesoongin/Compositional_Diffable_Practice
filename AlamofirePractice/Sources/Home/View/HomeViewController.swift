@@ -20,6 +20,23 @@ final class HomeViewController: ViewController<HomeView> {
         
         bindViewModel()
         bindViewActions()
+        bindAdapter()
+    }
+    
+    private func bindAdapter() {
+        adapter.actionEventPublisher
+            .sink { [weak self] actionItem in
+                print(">> \(actionItem)")
+                guard let self else { return }
+                
+                switch actionItem {
+                case let action as AssistantCommonErrorAction:
+                    self.adapter.toggleItemExpansion(with: action.identifier)
+                default:
+                    break
+                }
+            }
+            .store(in: &cancellables)
     }
     
     private func bindViewModel() {

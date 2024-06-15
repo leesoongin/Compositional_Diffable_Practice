@@ -14,6 +14,7 @@ final class CollectionViewAdapter<Section: CompositionalLayoutSectionType>: NSOb
     
     weak var collectionView: UICollectionView?
     var dataSource: UICollectionViewDiffableDataSource<Section, ListItem>!
+    var registeredCellIdentifiers = Set<String>()
     
     private let didSelectItemSubject = PassthroughSubject<ItemModelType, Never>()
     var didSelectItemPublisher: AnyPublisher<ItemModelType, Never> {
@@ -106,8 +107,11 @@ final class CollectionViewAdapter<Section: CompositionalLayoutSectionType>: NSOb
     }
     
     private func registerCellIfNeeded(with itemModel: ItemModelType) {
-//        guard registeredCellIdentifiers.contains(identifier) == false else { return }
-        collectionView?.register(itemModel.viewType.getClass(), forCellWithReuseIdentifier: itemModel.viewType.getIdentifier())
+        let reuseIdentifier = itemModel.viewType.getIdentifier()
+        guard registeredCellIdentifiers.contains(reuseIdentifier) == false else { return }
+        
+        collectionView?.register(itemModel.viewType.getClass(), forCellWithReuseIdentifier: reuseIdentifier)
+        registeredCellIdentifiers.insert(reuseIdentifier)
     }
     
     

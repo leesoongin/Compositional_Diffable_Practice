@@ -35,68 +35,14 @@ final class CollectionViewAdapter<Section: CompositionalLayoutSectionType>: NSOb
         super.init()
         
         self.collectionView = collectionView
-        self.collectionView?.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         
         let layout = createLayout()
         self.collectionView?.setCollectionViewLayout(layout, animated: false)
+        self.collectionView?.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         
         setupCollectionDataSource()
-        bindDelegateEvent()
         bindInputSections()
-    }
-    
-    func setupInputSectionsIfNeeded(with sections: [SectionModelType]) {
-        inputSectionSubject.send(sections)
-    }
-    
-    private func bindInputSections() {
-        inputSectionSubject
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] sections in
-                self?.updateSections(with: sections)
-            }
-            .store(in: &cancellables)
-    }
-    
-    private func bindDelegateEvent() {
-        collectionView?.didSelectItemPublisher
-            .sink(receiveValue: { [weak self] indexPath in
-                guard let itemModel = self?.dataSource.itemIdentifier(for: indexPath)?.itemModel else {
-                    return
-                }
-                
-                self?.didSelectItemSubject.send(itemModel)
-            })
-            .store(in: &cancellables)
-    }
-    
-    private func bindActionEvent(with view: UICollectionReusableView) {
-        guard let actionEventEmitable: ActionEventEmitable = convertProtocol(with: view) else { return }
-        
-        let actionEventCancellables = actionEventEmitable.actionEventEmitter
-            .sink { [weak self] actionEvent in
-                self?.actionEventSubject.send(actionEvent)
-            }
-        actionEventCancellables
-            .store(in: &cancellables)
-        
-        cancelForPrepareForReuse(with: view, cancellables: [actionEventCancellables])
-    }
-    
-    private func cancelForPrepareForReuse(with view: UICollectionReusableView, cancellables: [AnyCancellable]) {
-        guard let collectionView = collectionView else { return }
-        
-        view.prepareForReuseSubject
-            .first()
-            .sink(receiveValue: {_ in 
-                cancellables.forEach { $0.cancel() }
-            }).store(in: &self.cancellables)
-    }
-    
-    private func updateSections(with inputSections: [SectionModelType]) {
-        guard !inputSections.isEmpty else { return }
-        
-        applySnapshot(with: inputSections)
+        bindDelegateEvent()
     }
     
     private func createLayout() -> UICollectionViewLayout {
@@ -105,23 +51,11 @@ final class CollectionViewAdapter<Section: CompositionalLayoutSectionType>: NSOb
             return sectionAllCases[sectionIndex].createCollectionLayout()
         }
     }
-    
-    private func registerCellIfNeeded(with itemModel: ItemModelType) {
-        let reuseIdentifier = itemModel.viewType.getIdentifier()
-        guard registeredCellIdentifiers.contains(reuseIdentifier) == false else { return }
-        
-        collectionView?.register(itemModel.viewType.getClass(), forCellWithReuseIdentifier: reuseIdentifier)
-        registeredCellIdentifiers.insert(reuseIdentifier)
-    }
-    
-    
-    private func bindItemModelIfNeeded(to cell: UICollectionReusableView, with itemModel: ItemModelType) {
-        guard let cell = cell as? ItemModelBindableProtocol else { return }
-        UIView.performWithoutAnimation {
-            cell.bind(with: itemModel)
-        }
-    }
-        
+}
+
+//MARK: - CollectionView Action & Data Binding
+extension CollectionViewAdapter {
+    /// Data Binding
     private func setupCollectionDataSource() {
         guard let collectionView = collectionView else { return }
         
@@ -142,6 +76,26 @@ final class CollectionViewAdapter<Section: CompositionalLayoutSectionType>: NSOb
         }
     }
     
+    /// Action Binding
+    func setupInputSectionsIfNeeded(with sections: [SectionModelType]) {
+        inputSectionSubject.send(sections)
+    }
+    
+    private func bindInputSections() {
+        inputSectionSubject
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] sections in
+                self?.updateSections(with: sections)
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func updateSections(with inputSections: [SectionModelType]) {
+        guard !inputSections.isEmpty else { return }
+        
+        applySnapshot(with: inputSections)
+    }
+    
     private func applySnapshot(with sections: [SectionModelType]) {
         var snapshot = NSDiffableDataSourceSnapshot<Section, ListItem>()
         
@@ -155,13 +109,62 @@ final class CollectionViewAdapter<Section: CompositionalLayoutSectionType>: NSOb
         self.dataSource.apply(snapshot, animatingDifferences: true)
     }
     
-    func toggleItemExpansion(with identifier: String) {
-        var snapshot = dataSource.snapshot()
+    private func bindDelegateEvent() {
+        collectionView?.didSelectItemPublisher
+            .sink(receiveValue: { [weak self] indexPath in
+                guard let itemModel = self?.dataSource.itemIdentifier(for: indexPath)?.itemModel else {
+                    return
+                }
+                
+                self?.didSelectItemSubject.send(itemModel)
+            })
+            .store(in: &cancellables)
+    }
+    
+    private func cancelForPrepareForReuse(with view: UICollectionReusableView, cancellables: [AnyCancellable]) {
+        guard let collectionView = collectionView else { return }
         
-        dataSource.apply(snapshot, animatingDifferences: true)
+        view.prepareForReuseSubject
+            .first()
+            .sink(receiveValue: {_ in
+                cancellables.forEach { $0.cancel() }
+            }).store(in: &self.cancellables)
     }
 }
 
+//MARK: - Cell DataBinding && ActionBinding && Regist
+extension CollectionViewAdapter {
+    private func bindActionEvent(with view: UICollectionReusableView) {
+        guard let actionEventEmitable: ActionEventEmitable = convertProtocol(with: view) else { return }
+        
+        let actionEventCancellables = actionEventEmitable.actionEventEmitter
+            .sink { [weak self] actionEvent in
+                self?.actionEventSubject.send(actionEvent)
+            }
+        actionEventCancellables
+            .store(in: &cancellables)
+        
+        cancelForPrepareForReuse(with: view, cancellables: [actionEventCancellables])
+    }
+    
+    
+    private func bindItemModelIfNeeded(to cell: UICollectionReusableView, with itemModel: ItemModelType) {
+        guard let cell = cell as? ItemModelBindableProtocol else { return }
+        UIView.performWithoutAnimation {
+            cell.bind(with: itemModel)
+        }
+    }
+    
+    private func registerCellIfNeeded(with itemModel: ItemModelType) {
+        let reuseIdentifier = itemModel.viewType.getIdentifier()
+        guard registeredCellIdentifiers.contains(reuseIdentifier) == false else { return }
+        
+        collectionView?.register(itemModel.viewType.getClass(), forCellWithReuseIdentifier: reuseIdentifier)
+        registeredCellIdentifiers.insert(reuseIdentifier)
+    }
+}
+
+//MARK: - Finder
 extension CollectionViewAdapter {
     func itemModel(at indexPath: IndexPath) -> ItemModelType? {
         sections[safe: indexPath.section]?.itemModels[safe: indexPath.item]
@@ -185,12 +188,5 @@ extension CollectionViewAdapter {
         } else {
             return nil
         }
-    }
-}
-
-extension Collection {
-    /// Returns the element at the specified index if it is within bounds, otherwise nil.
-    subscript (safe index: Index) -> Element? {
-        return indices.contains(index) ? self[index] : nil
     }
 }

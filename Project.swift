@@ -20,7 +20,10 @@ let project = Project(
                 .external(name: "Then"),
                 .external(name: "SnapKit"),
                 .external(name: "CombineExt"),
-                .external(name: "CombineCocoa")
+                .external(name: "CombineCocoa"),
+                .external(name: "RxSwiftExt"),
+                .external(name: "RxSwift")
+                
             ]
         ),
         .target(

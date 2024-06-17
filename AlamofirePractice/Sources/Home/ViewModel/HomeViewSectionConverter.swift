@@ -101,12 +101,9 @@ extension HomeViewSectionConverter {
         let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.8),
                                                heightDimension: .estimated(50))
         
-        let itemInset = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 0, trailing: 16)
-        
         let section = PlaylistSectionModel(identifier: "playlist_section",
                                            itemSize: itemSize,
-                                           groupSize: groupSize,
-                                           itemInset: itemInset)
+                                           groupSize: groupSize)
         return section
     }
 }

@@ -5,9 +5,11 @@
 //  Created by 이숭인 on 6/13/24.
 //
 
-import Foundation
+import UIKit
 
 public protocol SectionModelType: ModelType {
+    var collectionLayout: CompositionalLayoutModelType { get }
+    
     var header: ItemModelType? { get }
     var footer: ItemModelType? { get }
 

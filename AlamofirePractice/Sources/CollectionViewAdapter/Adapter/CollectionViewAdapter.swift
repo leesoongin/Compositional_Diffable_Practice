@@ -9,11 +9,13 @@ import UIKit
 import Combine
 import CombineCocoa
 
-final class CollectionViewAdapter<Section: CompositionalLayoutSectionType>: NSObject {
+final class CollectionViewAdapter: NSObject {
     var cancellables = Set<AnyCancellable>()
     
     weak var collectionView: UICollectionView?
-    var dataSource: UICollectionViewDiffableDataSource<Section, ListItem>!
+    private var collectionViewLayoutKey: UInt8 = 0
+    
+    var dataSource: UICollectionViewDiffableDataSource<SectionItem, ListItem>!
     var registeredCellIdentifiers = Set<String>()
     
     private let didSelectItemSubject = PassthroughSubject<ItemModelType, Never>()
@@ -35,21 +37,11 @@ final class CollectionViewAdapter<Section: CompositionalLayoutSectionType>: NSOb
         super.init()
         
         self.collectionView = collectionView
-        
-        let layout = createLayout()
-        self.collectionView?.setCollectionViewLayout(layout, animated: false)
         self.collectionView?.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         
         setupCollectionDataSource()
         bindInputSections()
         bindDelegateEvent()
-    }
-    
-    private func createLayout() -> UICollectionViewLayout {
-        return UICollectionViewCompositionalLayout { sectionIndex, enviroment -> NSCollectionLayoutSection? in
-            let sectionAllCases = Array(Section.allCases)
-            return sectionAllCases[sectionIndex].createCollectionLayout()
-        }
     }
 }
 
@@ -59,7 +51,7 @@ extension CollectionViewAdapter {
     private func setupCollectionDataSource() {
         guard let collectionView = collectionView else { return }
         
-        self.dataSource = UICollectionViewDiffableDataSource<Section, ListItem>(collectionView: collectionView) { (collectionView, indexPath, dj) -> UICollectionViewCell? in
+        self.dataSource = UICollectionViewDiffableDataSource<SectionItem, ListItem>(collectionView: collectionView) { (collectionView, indexPath, dj) -> UICollectionViewCell? in
             guard let itemModel = self.itemModel(at: indexPath) else {
                 return nil
             }
@@ -93,17 +85,32 @@ extension CollectionViewAdapter {
     private func updateSections(with inputSections: [SectionModelType]) {
         guard !inputSections.isEmpty else { return }
         
+        reconfigureCollectionViewLayoutIfNeeded(with: inputSections)
         applySnapshot(with: inputSections)
     }
     
-    private func applySnapshot(with sections: [SectionModelType]) {
-        var snapshot = NSDiffableDataSourceSnapshot<Section, ListItem>()
+    private func reconfigureCollectionViewLayoutIfNeeded(with sectionModels: [SectionModelType]) {
+        guard (objc_getAssociatedObject(self, &collectionViewLayoutKey) as? UICollectionViewCompositionalLayout) == nil else {
+            return
+        }
         
-        let sectionAllCases = Array(Section.allCases)
-        for (sectionModel, sectionType) in zip(sections, sectionAllCases) {
-            let listItem = sectionModel.itemModels.map { ListItem(itemModel: $0 )}
-            snapshot.appendSections([sectionType])
-            snapshot.appendItems(listItem, toSection: sectionType)
+        let layout = UICollectionViewCompositionalLayout { sectionIndex, enviroment -> NSCollectionLayoutSection? in
+            return sectionModels[safe: sectionIndex]?.collectionLayout.createLayoutSection()
+        }
+        
+        objc_setAssociatedObject(self, &collectionViewLayoutKey, layout, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        collectionView?.setCollectionViewLayout(layout, animated: true)
+    }
+    
+    private func applySnapshot(with sections: [SectionModelType]) {
+        var snapshot = NSDiffableDataSourceSnapshot<SectionItem, ListItem>()
+        
+        sections.forEach { section in
+            let sectionItem = SectionItem(sectionModel: section)
+            let listItems = section.itemModels.map { ListItem(itemModel: $0) }
+            
+            snapshot.appendSections([sectionItem])
+            snapshot.appendItems(listItems, toSection: sectionItem)
         }
         
         self.dataSource.apply(snapshot, animatingDifferences: true)
@@ -122,8 +129,6 @@ extension CollectionViewAdapter {
     }
     
     private func cancelForPrepareForReuse(with view: UICollectionReusableView, cancellables: [AnyCancellable]) {
-        guard let collectionView = collectionView else { return }
-        
         view.prepareForReuseSubject
             .first()
             .sink(receiveValue: {_ in

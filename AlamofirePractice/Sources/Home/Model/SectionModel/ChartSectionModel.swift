@@ -8,8 +8,6 @@
 import UIKit
 
 struct ChartSectionModel: CompositionalLayoutModelType {
-    var sectionType: any CompositionalLayoutSectionType = HomeViewSection.chart
-    
     var identifier: String = String(describing: ChartSectionModel.self)
     var groupSize: NSCollectionLayoutSize
     var itemSize: NSCollectionLayoutSize

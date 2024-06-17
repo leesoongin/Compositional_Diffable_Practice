@@ -8,8 +8,7 @@
 import UIKit
 
 /// CollectionLayout 을 만들기 위한 ModelType 으로 정의
-protocol CompositionalLayoutModelType {
-    var sectionType: any CompositionalLayoutSectionType { get }
+public protocol CompositionalLayoutModelType {
     var identifier: String { get } // 필요없을지도? 일단 두자.
 
     var groupSize: NSCollectionLayoutSize { get set }

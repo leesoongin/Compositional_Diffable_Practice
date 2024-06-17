@@ -8,8 +8,6 @@
 import UIKit
 
 struct PlaylistSectionModel: CompositionalLayoutModelType {
-    var sectionType: any CompositionalLayoutSectionType = HomeViewSection.playlist
-    
     var identifier: String = String(describing: PlaylistSectionModel.self)
     var groupSize: NSCollectionLayoutSize
     var itemSize: NSCollectionLayoutSize

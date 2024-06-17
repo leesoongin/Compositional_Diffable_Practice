@@ -12,7 +12,7 @@ import CombineCocoa
 final class HomeViewController: ViewController<HomeView> {
     var cancellables = Set<AnyCancellable>()
     
-    private lazy var adapter = CollectionViewAdapter<HomeViewSection>(with: contentView.collectionView)
+    private lazy var adapter = CollectionViewAdapter(with: contentView.collectionView)
     private let viewModel = HomeViewModel()
     
     override func viewDidLoad() {

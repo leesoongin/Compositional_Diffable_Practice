@@ -37,6 +37,12 @@ final class HomeViewController: ViewController<HomeView> {
                 }
             }
             .store(in: &cancellables)
+        
+        adapter.didSelectItemPublisher
+            .sink { [weak self] itemModel in
+                print("model > \(itemModel)")
+            }
+            .store(in: &cancellables)
     }
     
     private func bindViewModel() {

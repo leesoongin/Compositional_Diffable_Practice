@@ -8,38 +8,30 @@
 import UIKit
 
 struct ChartSectionModel: CompositionalLayoutModelType {
-    var identifier: String = String(describing: ChartSectionModel.self)
-    var groupSize: NSCollectionLayoutSize
-    var itemSize: NSCollectionLayoutSize
-    var itemInset: NSDirectionalEdgeInsets
+    var itemStrategy: SizeStrategy
+    var groupStrategy: SizeStrategy
+    
+    var headerStrategy: SizeStrategy?
+    var footerStrategy: SizeStrategy?
+    
+    var groupSpacing: CGFloat
     var sectionInset: NSDirectionalEdgeInsets
-    var itemModels: [String]
-//    var itemModels: [ItemModelType]
     
-    init(identifier: String,
-         itemSize: NSCollectionLayoutSize,
-         groupSize: NSCollectionLayoutSize,
-         itemInset: NSDirectionalEdgeInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0),
-         sectionInset: NSDirectionalEdgeInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0),
-         itemModels: [String] = []) {
-        self.identifier = identifier
-        self.groupSize = groupSize
-        self.itemSize = itemSize
-        self.itemInset = itemInset
+    var scrollBehavior: UICollectionLayoutSectionOrthogonalScrollingBehavior
+    
+    init(itemStrategy: SizeStrategy,
+         groupStrategy: SizeStrategy,
+         headerStrategy: SizeStrategy? = nil,
+         footerStrategy: SizeStrategy? = nil,
+         groupSpacing: CGFloat = 0,
+         sectionInset: NSDirectionalEdgeInsets = .init(vertical: 0, horizontal: 0),
+         scrollBehavior: UICollectionLayoutSectionOrthogonalScrollingBehavior) {
+        self.itemStrategy = itemStrategy
+        self.groupStrategy = groupStrategy
+        self.headerStrategy = headerStrategy
+        self.footerStrategy = footerStrategy
+        self.groupSpacing = groupSpacing
         self.sectionInset = sectionInset
-        self.itemModels = itemModels
-    }
-    
-    func createLayoutSection() -> NSCollectionLayoutSection {
-        let item = NSCollectionLayoutItem(layoutSize: self.itemSize)
-        
-        // group
-        let group = NSCollectionLayoutGroup.horizontal(layoutSize: self.groupSize, subitems: [item])
-        
-        // section
-        let section = NSCollectionLayoutSection(group: group)
-        section.contentInsets = self.sectionInset
-        section.orthogonalScrollingBehavior = .continuous
-        return section
+        self.scrollBehavior = scrollBehavior
     }
 }

@@ -17,6 +17,7 @@ final class CollectionViewAdapter: NSObject {
     
     var dataSource: UICollectionViewDiffableDataSource<SectionItem, ListItem>!
     var registeredCellIdentifiers = Set<String>()
+    var registeredSupplementaryCellIdentifiers = Set<String>()
     
     private let didSelectItemSubject = PassthroughSubject<ItemModelType, Never>()
     var didSelectItemPublisher: AnyPublisher<ItemModelType, Never> {
@@ -51,7 +52,7 @@ extension CollectionViewAdapter {
     private func setupCollectionDataSource() {
         guard let collectionView = collectionView else { return }
         
-        self.dataSource = UICollectionViewDiffableDataSource<SectionItem, ListItem>(collectionView: collectionView) { (collectionView, indexPath, dj) -> UICollectionViewCell? in
+        dataSource = UICollectionViewDiffableDataSource<SectionItem, ListItem>(collectionView: collectionView) { (collectionView, indexPath, dj) -> UICollectionViewCell? in
             guard let itemModel = self.itemModel(at: indexPath) else {
                 return nil
             }
@@ -64,6 +65,20 @@ extension CollectionViewAdapter {
             self.bindItemModelIfNeeded(to: cell, with: itemModel)
             self.bindActionEvent(with: cell)
             
+            return cell
+        }
+        
+        dataSource.supplementaryViewProvider = { (view, kind, indexPath) -> UICollectionReusableView? in
+            guard let itemModel = self.headerFooterOfItemModel(at: indexPath, kind: kind) else {
+                return nil
+            }
+            
+            self.registerSupplementaryViewIfNeeded(with: itemModel, kind: kind)
+            
+            let reuseIdentifier = itemModel.viewType.getIdentifier()
+            let cell = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: reuseIdentifier, for: indexPath)
+            cell.backgroundColor = .systemGray4
+            self.bindItemModelIfNeeded(to: cell, with: itemModel)
             return cell
         }
     }
@@ -94,8 +109,12 @@ extension CollectionViewAdapter {
             return
         }
         
-        let layout = UICollectionViewCompositionalLayout { sectionIndex, enviroment -> NSCollectionLayoutSection? in
-            return sectionModels[safe: sectionIndex]?.collectionLayout.createLayoutSection()
+        let layout = UICollectionViewCompositionalLayout { [weak self] sectionIndex, enviroment -> NSCollectionLayoutSection? in
+            guard let layoutModel = sectionModels[safe: sectionIndex]?.collectionLayout else {
+                return nil
+            }
+            
+            return self?.createLayoutSection(with: layoutModel)
         }
         
         objc_setAssociatedObject(self, &collectionViewLayoutKey, layout, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
@@ -167,12 +186,37 @@ extension CollectionViewAdapter {
         collectionView?.register(itemModel.viewType.getClass(), forCellWithReuseIdentifier: reuseIdentifier)
         registeredCellIdentifiers.insert(reuseIdentifier)
     }
+    
+    private func registerSupplementaryViewIfNeeded(with itemModel: ItemModelType, kind: String) {
+        let reuseIdentifier = itemModel.viewType.getIdentifier()
+        guard registeredSupplementaryCellIdentifiers.contains("\(kind)-\(reuseIdentifier)") == false else {
+            print("::: 이미있음")
+            return
+        }
+        
+        print("::: 저장함")
+        collectionView?.register(itemModel.viewType.getClass(), forSupplementaryViewOfKind: kind, withReuseIdentifier: reuseIdentifier)
+        registeredSupplementaryCellIdentifiers.insert("\(kind)-\(reuseIdentifier)")
+    }
 }
 
 //MARK: - Finder
 extension CollectionViewAdapter {
     func itemModel(at indexPath: IndexPath) -> ItemModelType? {
         sections[safe: indexPath.section]?.itemModels[safe: indexPath.item]
+    }
+    
+    func headerFooterOfItemModel(at indexPath: IndexPath, kind: String) -> ItemModelType? {
+        switch kind {
+        case UICollectionView.elementKindSectionHeader:
+            print("::: header return")
+            return sections[safe: indexPath.section]?.header
+        case UICollectionView.elementKindSectionFooter:
+            print("::: footer return")
+            return sections[safe: indexPath.section]?.header
+        default:
+            return nil
+        }
     }
     
     func findIndexPathByIdentifier(with identifier: String) -> IndexPath? {
@@ -193,5 +237,45 @@ extension CollectionViewAdapter {
         } else {
             return nil
         }
+    }
+    
+    private func createLayoutSection(with layoutModel: CompositionalLayoutModelType) -> NSCollectionLayoutSection {
+        // item
+        let itemSize = NSCollectionLayoutSize(widthDimension: layoutModel.itemStrategy.value.widthDimension,
+                                              heightDimension: layoutModel.itemStrategy.value.heightDimension)
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        
+        // group
+        let groupSize = NSCollectionLayoutSize(widthDimension: layoutModel.groupStrategy.value.widthDimension,
+                                               heightDimension: layoutModel.groupStrategy.value.heightDimension)
+        let group = NSCollectionLayoutGroup.vertical(layoutSize: groupSize,
+                                                     subitems: [item])
+        
+        // section
+        let section = NSCollectionLayoutSection(group: group)
+        section.interGroupSpacing = layoutModel.groupSpacing
+        section.contentInsets = layoutModel.sectionInset
+        section.orthogonalScrollingBehavior = layoutModel.scrollBehavior
+        
+        // header / footer
+        if let headerStrategy = layoutModel.headerStrategy {
+            let headerSize = NSCollectionLayoutSize(widthDimension: headerStrategy.value.widthDimension,
+                                                    heightDimension: headerStrategy.value.heightDimension)
+            let header = NSCollectionLayoutBoundarySupplementaryItem(layoutSize: headerSize,
+                                                                     elementKind: UICollectionView.elementKindSectionHeader, alignment: .top)
+            section.boundarySupplementaryItems.append(header)
+            print("section.boundarySupplementary Header > \(section.boundarySupplementaryItems)")
+        }
+        
+        if let footerStrategy = layoutModel.footerStrategy {
+            let footerSize = NSCollectionLayoutSize(widthDimension: footerStrategy.value.widthDimension,
+                                                    heightDimension: footerStrategy.value.heightDimension)
+            let footer = NSCollectionLayoutBoundarySupplementaryItem(layoutSize: footerSize,
+                                                                     elementKind: UICollectionView.elementKindSectionFooter, alignment: .bottom)
+            section.boundarySupplementaryItems.append(footer)
+            print("section.boundarySupplementary Footer > \(section.boundarySupplementaryItems)")
+        }
+        
+        return section
     }
 }

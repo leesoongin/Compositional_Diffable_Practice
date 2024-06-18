@@ -33,9 +33,20 @@ extension HomeViewSectionConverter {
         }
         
         let section = SectionModel(identifier: "chart_input_section_2",
-                                   collectionLayout: createChartCollectionLayout(),
+                                   collectionLayout: createChartCollectionLayout2(),
                                    itemModels: mockComponents)
         return [section]
+    }
+    
+    private func createChartCollectionLayout2() -> ChartSectionModel {
+        let section = ChartSectionModel(itemStrategy: .item(widthDimension: .fractionalWidth(1.0),
+                                                            heightDimension: .estimated(50)),
+                                        groupStrategy: .group(widthDimension: .fractionalWidth(1.0),
+                                                              heightDimension: .estimated(50)),
+                                        sectionInset: .with(top: 8, bottom: 8),
+                                        scrollBehavior: .none)
+        
+        return section
     }
     
     private func createPlaylistSections2(with items: [HomeModel]) -> [SectionModelType] {
@@ -44,9 +55,20 @@ extension HomeViewSectionConverter {
         }
 
         let section = SectionModel(identifier: "playlist_input_section_2",
-                                   collectionLayout: createPlaylistCollectionLayout(),
+                                   collectionLayout: createPlaylistCollectionLayout2(),
                                    itemModels: mockComponents)
         return [section]
+    }
+    
+    private func createPlaylistCollectionLayout2() -> PlaylistSectionModel {
+        let section = PlaylistSectionModel(itemStrategy: .item(widthDimension: .fractionalWidth(1.0),
+                                                 heightDimension: .estimated(50)),
+                             groupStrategy: .group(widthDimension: .fractionalWidth(1.0),
+                                                   heightDimension: .estimated(50)),
+                             sectionInset: .with(top: 8, bottom: 8),
+                             scrollBehavior: .none)
+        
+        return section
     }
 }
 
@@ -60,23 +82,23 @@ extension HomeViewSectionConverter {
         
         let section = SectionModel(identifier: "chart_input_section",
                                    collectionLayout: createChartCollectionLayout(),
+                                   header: HeaderComponent(identifier: "header", message: "header/header"),
+                                   footer: HeaderComponent(identifier: "footer", message: "footer/footer"),
                                    itemModels: mockComponents)
         return [section]
     }
     
     private func createChartCollectionLayout() -> ChartSectionModel {
-        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
-                                              heightDimension: .estimated(50))
-        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
-                                               heightDimension: .estimated(50))
-        
-        let itemInset = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
-        let sectionInset = NSDirectionalEdgeInsets(top: 16, leading: 0, bottom: 16, trailing: 0)
-        let section = ChartSectionModel(identifier: "chart_section",
-                                        itemSize: itemSize,
-                                        groupSize: groupSize,
-                                        itemInset: itemInset,
-                                        sectionInset: sectionInset)
+        let section = ChartSectionModel(itemStrategy: .item(widthDimension: .fractionalWidth(1.0),
+                                                            heightDimension: .estimated(50)),
+                                        groupStrategy: .group(widthDimension: .fractionalWidth(1.0),
+                                                              heightDimension: .estimated(50)),
+                                        headerStrategy: .header(widthDimension: .fractionalWidth(1.0),
+                                                                heightDimension: .estimated(32)),
+                                        footerStrategy: .footer(widthDimension: .fractionalWidth(1.0),
+                                                                heightDimension: .estimated(32)),
+                                        sectionInset: .with(top: 8, bottom: 8),
+                                        scrollBehavior: .none)
         
         return section
     }
@@ -91,19 +113,24 @@ extension HomeViewSectionConverter {
 
         let section = SectionModel(identifier: "playlist_input_section",
                                    collectionLayout: createPlaylistCollectionLayout(),
+                                   header: HeaderComponent(identifier: "header2", message: "header/header"),
+                                   footer: HeaderComponent(identifier: "footer2", message: "footer/footer"),
                                    itemModels: mockComponents)
         return [section]
     }
     
     private func createPlaylistCollectionLayout() -> PlaylistSectionModel {
-        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
-                                              heightDimension: .estimated(50))
-        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.8),
-                                               heightDimension: .estimated(50))
+        let section = PlaylistSectionModel(itemStrategy: .item(widthDimension: .fractionalWidth(1.0),
+                                                 heightDimension: .estimated(50)),
+                             groupStrategy: .group(widthDimension: .fractionalWidth(1.0),
+                                                   heightDimension: .estimated(50)),
+                             headerStrategy: .header(widthDimension: .fractionalWidth(1.0),
+                                                     heightDimension: .estimated(56)),
+                             footerStrategy: .footer(widthDimension: .fractionalWidth(1.0),
+                                                     heightDimension: .estimated(56)),
+                             sectionInset: .with(top: 8, bottom: 8),
+                             scrollBehavior: .none)
         
-        let section = PlaylistSectionModel(identifier: "playlist_section",
-                                           itemSize: itemSize,
-                                           groupSize: groupSize)
         return section
     }
 }

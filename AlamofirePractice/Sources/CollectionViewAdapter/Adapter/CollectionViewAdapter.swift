@@ -9,7 +9,7 @@ import UIKit
 import Combine
 import CombineCocoa
 
-final class CollectionViewAdapter: NSObject {
+public final class CollectionViewAdapter: NSObject {
     var cancellables = Set<AnyCancellable>()
     
     weak var collectionView: UICollectionView?

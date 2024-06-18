@@ -7,15 +7,15 @@
 
 import Foundation
 
-struct SectionItem: Hashable {
+public struct SectionItem: Hashable {
     let sectionModel: SectionModelType
     var differenceIdentifier: String { sectionModel.identifier }
     
-    static func == (lhs: SectionItem, rhs: SectionItem) -> Bool {
+    public static func == (lhs: SectionItem, rhs: SectionItem) -> Bool {
         lhs.sectionModel.hashValue == rhs.sectionModel.hashValue
     }
 
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         hasher.combine(sectionModel.hashValue)
     }
 }

@@ -24,7 +24,7 @@ final class HomeViewModel {
     var mockPlaylist2: [HomeModel] = []
     
     init() {
-        mockCharts = Array(1...7).map { HomeModel(identifier: UUID().uuidString, item: "\($0)") }
+        mockCharts = Array(1...5).map { HomeModel(identifier: UUID().uuidString, item: "\($0)") }
         mockPlaylist = Array(1...14).map { HomeModel(identifier: UUID().uuidString, item: "\($0)") }
         mockCharts2 = Array(1...7).map { HomeModel(identifier: UUID().uuidString, item: "\($0)") }
         mockPlaylist2 = Array(1...7).map { HomeModel(identifier: UUID().uuidString, item: "\($0)") }

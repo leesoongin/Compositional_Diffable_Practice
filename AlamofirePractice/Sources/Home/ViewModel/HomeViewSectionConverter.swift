@@ -29,22 +29,29 @@ final class HomeViewSectionConverter {
 extension HomeViewSectionConverter {
     private func createChartSections2(with items: [HomeModel]) -> [SectionModelType] {
         let mockComponents = items.map { item in
-            AssistantCommonErrorComponent(identifier: item.identifier, message: item.item)
+            HomeFeedComponent(identifier: item.identifier)
         }
         
         let section = SectionModel(identifier: "chart_input_section_2",
                                    collectionLayout: createChartCollectionLayout2(),
+                                   header: HeaderComponent(identifier: "header", message: "header/header"),
+                                   footer: HeaderComponent(identifier: "footer", message: "footer/footer"),
                                    itemModels: mockComponents)
         return [section]
     }
     
     private func createChartCollectionLayout2() -> ChartSectionModel {
         let section = ChartSectionModel(itemStrategy: .item(widthDimension: .fractionalWidth(1.0),
-                                                            heightDimension: .estimated(50)),
+                                                            heightDimension: .estimated(352)),
                                         groupStrategy: .group(widthDimension: .fractionalWidth(1.0),
-                                                              heightDimension: .estimated(50)),
+                                                              heightDimension: .estimated(352)),
+                                        headerStrategy: .header(widthDimension: .fractionalWidth(1.0),
+                                                                heightDimension: .estimated(32)),
+                                        footerStrategy: .footer(widthDimension: .fractionalWidth(1.0),
+                                                                heightDimension: .estimated(32)),
+                                        groupSpacing: 8,
                                         sectionInset: .with(top: 8, bottom: 8),
-                                        scrollBehavior: .none)
+                                        scrollBehavior: .groupPagingCentered)
         
         return section
     }
@@ -77,26 +84,20 @@ extension HomeViewSectionConverter {
 extension HomeViewSectionConverter {
     private func createChartSections(with items: [HomeModel]) -> [SectionModelType] {
         let mockComponents = items.map { item in
-            AssistantCommonErrorComponent(identifier: item.identifier, message: item.item)
+            HomeFeedComponent(identifier: item.identifier)
         }
         
         let section = SectionModel(identifier: "chart_input_section",
                                    collectionLayout: createChartCollectionLayout(),
-                                   header: HeaderComponent(identifier: "header", message: "header/header"),
-                                   footer: HeaderComponent(identifier: "footer", message: "footer/footer"),
                                    itemModels: mockComponents)
         return [section]
     }
     
     private func createChartCollectionLayout() -> ChartSectionModel {
         let section = ChartSectionModel(itemStrategy: .item(widthDimension: .fractionalWidth(1.0),
-                                                            heightDimension: .estimated(50)),
+                                                            heightDimension: .estimated(352)),
                                         groupStrategy: .group(widthDimension: .fractionalWidth(1.0),
-                                                              heightDimension: .estimated(50)),
-                                        headerStrategy: .header(widthDimension: .fractionalWidth(1.0),
-                                                                heightDimension: .estimated(32)),
-                                        footerStrategy: .footer(widthDimension: .fractionalWidth(1.0),
-                                                                heightDimension: .estimated(32)),
+                                                              heightDimension: .estimated(352)),
                                         sectionInset: .with(top: 8, bottom: 8),
                                         scrollBehavior: .none)
         
@@ -108,28 +109,22 @@ extension HomeViewSectionConverter {
 extension HomeViewSectionConverter {
     private func createPlaylistSections(with items: [HomeModel]) -> [SectionModelType] {
         let mockComponents = items.map { item in
-            AssistantCommonErrorComponent(identifier: item.identifier, message: item.item)
+            HomeFeedComponent(identifier: item.identifier)
         }
 
         let section = SectionModel(identifier: "playlist_input_section",
                                    collectionLayout: createPlaylistCollectionLayout(),
-                                   header: HeaderComponent(identifier: "header2", message: "header/header"),
-                                   footer: HeaderComponent(identifier: "footer2", message: "footer/footer"),
                                    itemModels: mockComponents)
         return [section]
     }
     
     private func createPlaylistCollectionLayout() -> PlaylistSectionModel {
         let section = PlaylistSectionModel(itemStrategy: .item(widthDimension: .fractionalWidth(1.0),
-                                                 heightDimension: .estimated(50)),
-                             groupStrategy: .group(widthDimension: .fractionalWidth(1.0),
-                                                   heightDimension: .estimated(50)),
-                             headerStrategy: .header(widthDimension: .fractionalWidth(1.0),
-                                                     heightDimension: .estimated(56)),
-                             footerStrategy: .footer(widthDimension: .fractionalWidth(1.0),
-                                                     heightDimension: .estimated(56)),
-                             sectionInset: .with(top: 8, bottom: 8),
-                             scrollBehavior: .none)
+                                                               heightDimension: .estimated(352)),
+                                           groupStrategy: .group(widthDimension: .fractionalWidth(1.0),
+                                                                 heightDimension: .estimated(352)),
+                                           sectionInset: .with(top: 8, bottom: 8),
+                                           scrollBehavior: .continuous)
         
         return section
     }

@@ -69,11 +69,11 @@ extension HomeViewSectionConverter {
     
     private func createPlaylistCollectionLayout2() -> PlaylistSectionModel {
         let section = PlaylistSectionModel(itemStrategy: .item(widthDimension: .fractionalWidth(1.0),
-                                                 heightDimension: .estimated(50)),
-                             groupStrategy: .group(widthDimension: .fractionalWidth(1.0),
-                                                   heightDimension: .estimated(50)),
-                             sectionInset: .with(top: 8, bottom: 8),
-                             scrollBehavior: .none)
+                                                               heightDimension: .estimated(50)),
+                                           groupStrategy: .group(widthDimension: .fractionalWidth(1.0),
+                                                                 heightDimension: .estimated(50)),
+                                           sectionInset: .with(top: 8, bottom: 8),
+                                           scrollBehavior: .none)
         
         return section
     }

@@ -77,8 +77,9 @@ extension CollectionViewAdapter {
             
             let reuseIdentifier = itemModel.viewType.getIdentifier()
             let cell = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: reuseIdentifier, for: indexPath)
-            cell.backgroundColor = .systemGray4
+            
             self.bindItemModelIfNeeded(to: cell, with: itemModel)
+            self.bindActionEvent(with: cell)
             return cell
         }
     }

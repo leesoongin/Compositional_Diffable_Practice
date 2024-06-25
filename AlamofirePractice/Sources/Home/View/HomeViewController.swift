@@ -60,7 +60,11 @@ extension HomeViewController {
     private func bindViewActions() {
         contentView.button.tapPublisher
             .sink { [weak self] _ in
-                self?.viewModel.addPlaylist()
+//                self?.viewModel.addPlaylist()
+                let apiVC = APIListViewController()
+//                apiVC.modalPresentationStyle = .fullScreen
+//                self?.present(apiVC, animated: true)
+                self?.navigationController?.pushViewController(apiVC, animated: true)
             }
             .store(in: &cancellables)
     }
